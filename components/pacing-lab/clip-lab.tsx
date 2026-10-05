@@ -63,7 +63,8 @@ export function ClipLab() {
   async function play() {
     if (!buffer.current || !audio.current) return;
     setError("");
-    try { await audio.current.play(buffer.current, () => setPlaying(false)); setPlaying(true); }
+    setPlaying(true);
+    try { if (!await audio.current.play(buffer.current, () => setPlaying(false))) setPlaying(false); }
     catch { setError("Playback failed. Check your browser's audio permissions."); setPlaying(false); }
   }
 

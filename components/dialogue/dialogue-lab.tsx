@@ -90,8 +90,22 @@ export function DialogueLab() {
     const item = turn?.generatedAssetId ? cache.current.get(turn.generatedAssetId) : undefined;
     if (!item || !engine.current) return;
     setError("");
-    try { await engine.current.play(item.buffer, () => setPlaying(null)); setPlaying(turnId); }
-    catch { setError("Could not play audio. Check browser permissions."); }
+    setPlaying(turnId);
+    try { if (!await engine.current.play(item.buffer, () => setPlaying(null))) setPlaying(null); }
+    catch { setError("Could not play audio. Check browser permissions."); setPlaying(null); }
+  }
+
+  async function playRaw() {
+    if (!engine.current || !rawClips.length) return;
+    setError(""); setPlaying("raw");
+    try {
+      const clips = rawClips.map((clip) => {
+        const item = cache.current.get(clip.assetId);
+        if (!item) throw new Error("Audio is missing. Generate the affected line again.");
+        return { ...clip, buffer: item.buffer };
+      });
+      if (!await engine.current.playTimeline(clips, () => setPlaying(null))) setPlaying(null);
+    } catch (error) { setError(error instanceof Error ? error.message : "Playback failed."); setPlaying(null); }
   }
 
   return <main className="mx-auto max-w-5xl px-5 py-10">
@@ -119,6 +133,7 @@ export function DialogueLab() {
       {error && <p role="alert" className="mt-4 rounded-lg border border-amber-700/50 bg-amber-950/40 p-4 text-sm text-amber-200">{error}</p>}
     </section>
     <DialogueTimeline characters={project.characters} turns={project.turns} clips={rawClips} />
+    <div className="mt-4 flex items-center gap-3"><button className={button} onClick={playRaw} disabled={busy || !rawClips.length || playing === "raw"}>Play Raw</button><button className={secondary} onClick={stop} disabled={!playing}>Stop playback</button><span role="status" className="text-sm text-slate-400">{playing === "raw" ? "Playing Raw" : ""}</span></div>
     <p className="mt-8 text-xs text-slate-500">This project stays in browser memory for now. Refreshing clears clips and edits.</p>
   </main>;
 }

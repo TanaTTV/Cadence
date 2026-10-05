@@ -13,7 +13,7 @@ npm run dev
 
 Open http://127.0.0.1:3000. The server binds to loopback for local use.
 
-## One-clip verification gate
+## Speech setup
 
 Copy `.env.example` to `.env.local` (a blank local file is already created in the original checkout). Set `ELEVENLABS_API_KEY` locally, then restart the dev server. Never paste the key into chat or use a `NEXT_PUBLIC_` variable for it.
 
@@ -25,9 +25,19 @@ The key remains server-side. Provider-specific code is under `lib/providers/elev
 
 Generated audio and editor state currently stay in browser memory for this gate. Refreshing loses the clip. No audio or project data is uploaded to Cadence infrastructure, and no server audio files are written. Speech text does go to the chosen provider when generation is requested.
 
-The full dialogue editor, timeline, pacing planner, comparison, and export are intentionally pending the live one-clip gate. The pacing AI provider is undecided.
+The one-clip gate has been verified with real Eleven v4 speech, decoded browser duration, and playback. The main screen now supports two characters, up to ten independent dialogue clips, a measured two-track timeline, and raw sequential playback. `/clip-test` retains the one-clip diagnostic screen.
 
 The default speech model is `eleven_v4`. Override `ELEVENLABS_MODEL_ID` in `.env.local` to compare another model. Each clip records the model used for generation.
+
+## Dialogue workflow
+
+1. Load voices. The initial assignments prefer built-in Sarah and George voices; some library voices require a paid plan.
+2. Edit the two character names and voices, then enter your scene (eight sample turns are included).
+3. Generate Dialogue to generate missing clips sequentially. Each line can also be generated, regenerated, or played independently.
+4. Review the actual durations and raw timeline. Editing a line or changing its speaker/voice invalidates its audio. If generation fails partway, completed clips remain available for retry.
+5. Play Raw once all lines are generated. The clips are scheduled on one Web Audio clock with zero added gaps. Stop cancels the whole schedule.
+
+The AI provider is undecided. AI planning, deterministic paced placement, Raw/Paced comparison, manual gaps, and export remain pending. This is an incremental implementation, not the finished Milestone 0.1.
 
 ## Development
 
