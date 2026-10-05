@@ -37,7 +37,19 @@ The default speech model is `eleven_v4`. Override `ELEVENLABS_MODEL_ID` in `.env
 4. Review the actual durations and raw timeline. Editing a line or changing its speaker/voice invalidates its audio. If generation fails partway, completed clips remain available for retry.
 5. Play Raw once all lines are generated. The clips are scheduled on one Web Audio clock with zero added gaps. Stop cancels the whole schedule.
 
-The AI provider is undecided. AI planning, deterministic paced placement, Raw/Paced comparison, manual gaps, and export remain pending. This is an incremental implementation, not the finished Milestone 0.1.
+The pacing-plan types and runtime validator are implemented under `types/pacing.ts` and `lib/pacing/validate-plan.ts`. Plans contain a version and exactly one semantic instruction per clip. Unknown fields (including timestamps), invalid ids, missing instructions, mixed gap/overlap, nonfinite numbers, and out-of-range timing are rejected before anything can be applied. Gaps are limited to 10 seconds; immediate responses to 0.25 seconds. Overlaps must fit within the preceding clip's real duration. The first clip uses `after_previous` with a zero gap.
+
+```json
+{
+  "version": 1,
+  "instructions": [
+    { "clipId": "turn-1", "relationship": "after_previous", "gapSeconds": 0 },
+    { "clipId": "turn-2", "relationship": "reaction_delay", "gapSeconds": 1.2, "reason": "Let the warning register" }
+  ]
+}
+```
+
+The AI provider is undecided. AI planning, deterministic paced placement, Raw/Paced comparison, manual gaps, and export remain pending. This is an incremental implementation through step 10, not the finished Milestone 0.1.
 
 ## Development
 
