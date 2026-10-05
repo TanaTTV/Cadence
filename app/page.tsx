@@ -1,2 +1,2 @@
-import { ClipLab } from "@/components/pacing-lab/clip-lab";
-export default function Home() { return <ClipLab />; }
+import { DialogueLab } from "@/components/dialogue/dialogue-lab";
+export default function Home() { return <DialogueLab />; }
