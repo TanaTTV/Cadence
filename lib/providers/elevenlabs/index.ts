@@ -11,7 +11,7 @@ export class ElevenLabsProvider implements VoiceProvider {
 
   constructor(options: { apiKey?: string; model?: string; fetcher?: typeof fetch } = {}) {
     this.apiKey = (options.apiKey ?? process.env.ELEVENLABS_API_KEY ?? "").trim();
-    this.model = options.model ?? process.env.ELEVENLABS_MODEL_ID ?? "eleven_multilingual_v2";
+    this.model = options.model?.trim() || process.env.ELEVENLABS_MODEL_ID?.trim() || "eleven_v4";
     this.fetcher = options.fetcher ?? fetch;
   }
 
@@ -29,10 +29,11 @@ export class ElevenLabsProvider implements VoiceProvider {
     if (!response.ok) {
       const message = response.status === 401 || response.status === 403
         ? "Voice provider rejected the key or its permissions. Check .env.local."
+        : response.status === 402 ? "Voice provider requires payment for this request. Try a built-in voice, or check your account plan and credits."
         : response.status === 429 ? "Voice provider quota or rate limit reached. Please retry later."
         : "Voice provider could not complete the request. Check the voice and account settings.";
       // Never relay upstream bodies, which may contain credentials or private input.
-      throw new ProviderError(message, response.status === 429 ? 429 : 502);
+      throw new ProviderError(message, response.status === 402 ? 402 : response.status === 429 ? 429 : 502);
     }
     return response;
   }

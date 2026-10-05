@@ -54,6 +54,18 @@ test("provider errors never expose upstream bodies or the key", async () => {
   }
 });
 
+test("paid voice rejection gives actionable feedback without exposing provider details", async () => {
+  const provider = new ElevenLabsProvider({ apiKey: "test-placeholder", fetcher: async () => new Response("private account details", { status: 402 }) });
+  try { await provider.generateSpeech({ voiceId: "a", text: "Hello" }); assert.fail("Expected rejection"); }
+  catch (error) {
+    const response = errorResponse(error);
+    assert.equal(response.status, 402);
+    const body = await response.text();
+    assert.match(body, /built-in voice/);
+    assert.doesNotMatch(body, /private account details/);
+  }
+});
+
 test("empty or non-audio responses cannot become assets", async () => {
   for (const response of [new Response(null, { headers: { "Content-Type": "audio/mpeg" } }), new Response("bad", { headers: { "Content-Type": "text/html" } })]) {
     const provider = new ElevenLabsProvider({ apiKey: "test-placeholder", fetcher: async () => response });
@@ -63,6 +75,7 @@ test("empty or non-audio responses cannot become assets", async () => {
 
 test("local generation rejects missing origins, cross-site requests, and remote hosts", () => {
   assert.doesNotThrow(() => assertLocalRequest(new Request("http://localhost:3000/api/speech", { headers: { origin: "http://localhost:3000" } }), true));
+  assert.doesNotThrow(() => assertLocalRequest(new Request("http://localhost:3000/api/speech", { headers: { host: "127.0.0.1:3000", origin: "http://127.0.0.1:3000" } }), true));
   for (const request of [new Request("http://localhost:3000/api/speech"), new Request("http://localhost:3000/api/speech", { headers: { origin: "https://attacker.invalid" } }), new Request("http://example.com/api/speech", { headers: { origin: "http://example.com" } })]) {
     assert.throws(() => assertLocalRequest(request, true));
   }

@@ -27,6 +27,8 @@ Generated audio and editor state currently stay in browser memory for this gate.
 
 The full dialogue editor, timeline, pacing planner, comparison, and export are intentionally pending the live one-clip gate. The pacing AI provider is undecided.
 
+The default speech model is `eleven_v4`. Override `ELEVENLABS_MODEL_ID` in `.env.local` to compare another model. Each clip records the model used for generation.
+
 ## Development
 
 ```sh

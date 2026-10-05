@@ -3,10 +3,14 @@ import { ProviderError } from "../providers/errors.ts";
 
 export function assertLocalRequest(request: Request, requireOrigin = false) {
   const url = new URL(request.url);
-  if (!["localhost", "127.0.0.1", "[::1]"].includes(url.hostname))
+  // Next.js may normalize request.url to localhost even when Host is 127.0.0.1.
+  // Validate the actual HTTP authority before comparing the browser's Origin.
+  const authority = request.headers.get("host") || url.host;
+  const actualUrl = new URL(`${url.protocol}//${authority}`);
+  if (!["localhost", "127.0.0.1", "[::1]"].includes(actualUrl.hostname))
     throw new ProviderError("This lab is intended for local use.", 403);
   const origin = request.headers.get("origin");
-  if ((requireOrigin && !origin) || (origin && origin !== url.origin))
+  if ((requireOrigin && !origin) || (origin && origin !== actualUrl.origin))
     throw new ProviderError("Only same-origin local requests are allowed.", 403);
   if (request.headers.get("sec-fetch-site") === "cross-site")
     throw new ProviderError("Cross-site requests are not allowed.", 403);
