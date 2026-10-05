@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { BrowserAudio } from "@/lib/audio/browser-audio";
 import { generateClip } from "@/lib/audio/generate-clip";
+import { buildRawTimeline } from "@/lib/audio/raw-timeline";
+import { DialogueTimeline } from "@/components/timeline/dialogue-timeline";
 import { useDialogueStore } from "@/lib/dialogue-store";
 import type { Voice } from "@/types/audio";
 
@@ -22,6 +24,7 @@ export function DialogueLab() {
   const cache = useRef(new Map<string, { buffer: AudioBuffer; url: string }>());
   const busy = loadingVoices || !!generating;
   const completed = project.turns.filter((t) => t.generatedAssetId).length;
+  const rawClips = completed === project.turns.length ? buildRawTimeline(project.turns, project.assets) : [];
 
   useEffect(() => {
     const audioCache = cache.current;
@@ -115,6 +118,7 @@ export function DialogueLab() {
       <p className="mt-3 text-xs leading-relaxed text-slate-500">Generates only missing clips, one at a time. Completed clips survive a later failure. Regenerate a line explicitly to replace it. Generation uses voice-provider credits.</p>
       {error && <p role="alert" className="mt-4 rounded-lg border border-amber-700/50 bg-amber-950/40 p-4 text-sm text-amber-200">{error}</p>}
     </section>
+    <DialogueTimeline characters={project.characters} turns={project.turns} clips={rawClips} />
     <p className="mt-8 text-xs text-slate-500">This project stays in browser memory for now. Refreshing clears clips and edits.</p>
   </main>;
 }
